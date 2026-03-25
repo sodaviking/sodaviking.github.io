@@ -1,15 +1,16 @@
-/* Import Lato font */
+/* lato font */
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap');
 
+/* other stuff */
 body {
-    background-color: rgb(228, 228, 238);
+    background-color: rgb(238, 238, 248);
     opacity: 0.9;
     font-family: "Lato", 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
 img {
     border: 1px;
-    max-width: 300px;
+    max-width: auto;
     height: auto;
     display: block;
     margin: 10px;
