@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Flashcards - Industriella Revolutionen</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f0f0f0;
+      margin: 0;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card {
+      width: 320px;
+      height: 200px;
+      perspective: 1000px;
+    }
+
+    .inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .card.flip .inner {
+      transform: rotateY(180deg);
+    }
+
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      background: white;
+    }
+
+    .back {
+      transform: rotateY(180deg);
+      background: #dff0d8;
+    }
+
+    button {
+      margin-top: 65px;
+      padding: 20px 50px;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card" onclick="flipCard()">
+    <div class="inner" id="card">
+      <div class="front" id="question">Fråga</div>
+      <div class="back" id="answer">Svar</div>
+    </div>
+  </div>
+
+  <button onclick="nextCard()">Nästa</button>
+</div>
+
+<script>
+  const flashcards = [
+    {q: "Vad är industriella revolutionen?", a: "En omvälvning där man började använda maskiner istället för handkraft."},
+    {q: "Var startade den?", a: "I Storbritannien på 1700-talet."},
+    {q: "Vad är kapitalism?", a: "Ett system där man försöker göra vinst och investera."},
+    {q: "Vad var triangelhandeln?", a: "Ett handelssystem som gav stora rikedomar."},
+    {q: "Vad är flaskhalsprincipen?", a: "Problem i produktionen som leder till nya uppfinningar."},
+    {q: "Nämn en viktig uppfinning.", a: "Ångmaskinen."},
+    {q: "Vad ledde bättre jordbruk till?", a: "Mer mat och större befolkning."},
+    {q: "Vad hände med städerna?", a: "De växte när fler flyttade dit för att jobba."},
+    {q: "Vad var reformationen?", a: "När England bröt med katolska kyrkan och tog dess rikedomar."},
+    {q: "Varför var kapital viktigt?", a: "Det användes för att investera i maskiner och fabriker."},
+    {q: "Vad är växelbruk?", a: "Att byta grödor för att få bättre skördar."},
+    {q: "Vad är skiftesreformen?", a: "Små åkrar slogs ihop till större."},
+    {q: "Vad gjorde Spinning Jenny?", a: "Den spann tråd mycket snabbare än människor."},
+    {q: "Vem uppfann ångmaskinen?", a: "James Watt."},
+    {q: "Vad gjorde ångloket?", a: "Transporterade varor och människor snabbt."},
+    {q: "Varför växte befolkningen?", a: "Mer mat och bättre sjukvård."},
+    {q: "Vad är en fabrik?", a: "En plats där varor tillverkas med maskiner."},
+    {q: "Vad är en investering?", a: "Att satsa pengar för att få mer i framtiden."}
+  ];
+
+  let index = 0;
+
+  function showCard() {
+    document.getElementById("question").innerText = flashcards[index].q;
+    document.getElementById("answer").innerText = flashcards[index].a;
+    document.querySelector(".card").classList.remove("flip");
+  }
+
+  function flipCard() {
+    document.querySelector(".card").classList.toggle("flip");
+  }
+
+  function nextCard() {
+    index = (index + 1) % flashcards.length;
+    showCard();
+  }
+
+  showCard();
+</script>
+
+</body>
+</html>
