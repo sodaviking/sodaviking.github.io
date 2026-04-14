@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fysik Quiz: Rörelse & Tryck</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #3b82f6;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .quiz-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .badge-e { background: #10b981; color: white; }
+        .badge-c { background: #f59e0b; color: white; }
+        .badge-a { background: #ef4444; color: white; }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: #334155;
+            padding: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background: #475569;
+        }
+
+        .option.correct {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .option.wrong {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .option.disabled {
+            pointer-events: none;
+        }
+
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background: #0f172a;
+            border-left: 4px solid var(--primary);
+            border-radius: 4px;
+            display: none;
+        }
+
+        .footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        #result-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .grade-display {
+            font-size: 5rem;
+            font-weight: 900;
+            margin: 20px 0;
+            color: var(--secondary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Fysik: Rörelse & Tryck</h1>
+        <p>30 frågor • E till A-nivå</p>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div id="quiz-screen" class="quiz-card">
+        <div id="badge" class="badge"></div>
+        <div id="question" class="question"></div>
+        <div id="options" class="options"></div>
+        <div id="explanation" class="explanation"></div>
+        
+        <div class="footer">
+            <span id="counter" class="text-muted">Fråga 1 av 30</span>
+            <button id="next-btn" class="btn" onclick="nextQuestion()">Nästa fråga</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="quiz-card">
+        <h2>Ditt resultat</h2>
+        <p>Du fick <span id="final-score"></span> av 30 rätt.</p>
+        <div class="grade-display" id="grade"></div>
+        <p id="grade-text"></p>
+        <button class="btn" style="display:inline-block; margin-top:20px;" onclick="location.reload()">Gör om quizet</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        // E-NIVÅ (1-10)
+        { q: "Vad är enheten för tryck?", o: ["Newton (N)", "Pascal (Pa)", "Joule (J)", "Watt (W)"], a: 1, l: "E", e: "Tryck mäts i Pascal (Pa), vilket är Newton per kvadratmeter." },
+        { q: "Vad händer med trycket om arean minskar men kraften är densamma?", o: ["Trycket minskar", "Trycket ökar", "Trycket är oförändrat", "Ingenting händer"], a: 1, l: "E", e: "Mindre yta betyder att kraften koncentreras, vilket höjer trycket." },
+        { q: "Vilken kraft drar föremål mot jordens mitt?", o: ["Tröghet", "Centripetalkraft", "Gravitation", "Luftmotstånd"], a: 2, l: "E", e: "Gravitation (tyngdkraft) drar allt med massa mot varandra." },
+        { q: "Vad kallas egenskapen hos materia att motstå rörelseförändring?", o: ["Acceleration", "Tröghet", "Friktion", "Vakuum"], a: 1, l: "E", e: "Tröghet gör att ett föremål vill behålla sin hastighet och riktning." },
+        { q: "Vad är 'fritt fall' i fysikens värld?", o: ["När man hoppar fallskärm", "Fall utan luftmotstånd", "När man tappar något", "När man svävar"], a: 1, l: "E", e: "I fysiken menas fall där endast gravitationen påverkar föremålet (vakuum)." },
+        { q: "Vad mäts kraft i för enhet?", o: ["Kilogram", "Pascal", "Newton", "Meter per sekund"], a: 2, l: "E", e: "Kraft mäts i Newton (N)." },
+        { q: "Var ligger tyngdpunkten på en symmetrisk linjal?", o: ["Vid 0 cm", "Vid 100 cm", "I mitten", "Den har ingen"], a: 2, l: "E", e: "Hos jämna föremål ligger tyngdpunkten i det geometriska mittpunkten." },
+        { q: "Vad krävs för att en centralrörelse ska uppstå?", o: ["En kraft som drar inåt", "En kraft som skjuter utåt", "Vakuum", "Hög fart"], a: 0, l: "E", e: "En centripetalkraft krävs för att hålla ett föremål i en cirkelbana." },
+        { q: "Vad är luftmotstånd?", o: ["Ett slags vakuum", "En kraft som bromsar i luft", "En form av gravitation", "Strålning"], a: 1, l: "E", e: "Luftmotstånd är friktion som uppstår när föremål krockar med luftens molekyler." },
+        { q: "Vad händer med din massa om du åker till månen?", o: ["Den minskar", "Den ökar", "Den är oförändrad", "Den blir noll"], a: 2, l: "E", e: "Massa (mängden atomer) ändras aldrig. Det är tyngden (kraften) som minskar på månen." },
+
+        // C-NIVÅ (11-20)
+        { q: "Varför har traktorer så breda däck?", o: ["För att öka hastigheten", "För att minska trycket på marken", "För att öka tyngden", "För utseendets skull"], a: 1, l: "C", e: "Bredare däck ökar stödytan/arean, vilket gör att trycket minskar så traktorn inte sjunker." },
+        { q: "Varför kastas du åt sidan när en bil svänger skarpt?", o: ["Centripetalkraften puttar dig", "Din tröghet vill fortsätta rakt fram", "Gravitationen ändras", "Bilen suger fast dig"], a: 1, l: "C", e: "Din kropp har tröghet och vill fortsätta i den gamla riktningen medan bilen svänger." },
+        { q: "Hur fungerar en krockkudde utifrån fysik?", o: ["Den minskar farten helt", "Den ökar tiden för inbromsningen", "Den tar bort gravitationen", "Den gör dig tyngdlös"], a: 1, l: "C", e: "Genom att öka tiden det tar att stanna minskar kraften på din kropp drastiskt." },
+        { q: "Varför faller en hammare och en fjäder lika snabbt på månen?", o: ["Månen har ingen gravitation", "Månen har inget luftmotstånd", "Månen är mindre", "De väger lika mycket där"], a: 1, l: "C", e: "Utan luftmotstånd faller alla föremål med samma acceleration oavsett massa." },
+        { q: "Vad händer om en bils lodlinje hamnar utanför stödytan?", o: ["Den accelererar", "Den välter", "Den stannar", "Den svävar"], a: 1, l: "C", e: "När tyngdpunkten hamnar utanför den yta bilen vilar på uppstår ett vältande moment." },
+        { q: "Varför sjunker man djupare i snö om man står på ett ben?", o: ["Kraften ökar", "Arean minskar vilket ökar trycket", "Arean ökar", "Tyngdpunkten ändras"], a: 1, l: "C", e: "Samma kraft (din vikt) på halva ytan dubblerar trycket mot snön." },
+        { q: "Hur påverkas en kaströrelse av gravitationen?", o: ["Den bromsar farten framåt", "Den drar föremålet nedåt i en kurva", "Den gör banan spikrak", "Den påverkar inte kasten"], a: 1, l: "C", e: "Kaströrelsen är en kombination av rätlinjig rörelse framåt och fritt fall nedåt." },
+        { q: "Vad är skillnaden mellan centripetalkraft och centrifugalkraft?", o: ["Det är samma sak", "Centripetal är inåt, centrifugal upplevs utåt", "Centrifugal är en riktig kraft", "Båda drar nedåt"], a: 1, l: "C", e: "Centripetalkraften är den verkliga kraften inåt. Centrifugal är bara en upplevelse pga tröghet." },
+        { q: "Varför är det svårare att stanna en tung lastbil än en liten bil?", o: ["Lastbilen har mer friktion", "Lastbilen har större massa och därmed mer tröghet", "Lastbilen har sämre bromsar", "Lilla bilen är snabbare"], a: 1, l: "C", e: "Större massa innebär större motstånd mot att ändra hastighet (stanna)." },
+        { q: "Varför blir du 'tyngre' i en hiss som precis startar uppåt?", o: ["Din massa ökar", "Hissen trycker dig uppåt mot din tröghet", "Gravitationen ökar", "Lufttrycket ökar"], a: 1, l: "C", e: "Hissen accelererar uppåt och din tröghet vill hålla dig kvar, vilket ökar normalkraften från golvet." },
+
+        // A-NIVÅ (21-30)
+        { q: "Varför upplever astronauter tyngdlöshet på ISS trots att gravitationen finns?", o: ["De är för långt bort", "De befinner sig i ett konstant fritt fall", "ISS har anti-gravitation", "Centrifugalkraften tar ut allt"], a: 1, l: "A", e: "De faller runt jorden i samma takt som stationen. Eftersom de faller tillsammans känns ingen tyngd." },
+        { q: "Om du skjuter en kula horisontellt och släpper en kula rakt ner samtidigt, vilken landar först?", o: ["Den som släpps ner", "Den som skjuts", "Båda samtidigt", "Beror på kulans vikt"], a: 2, l: "A", e: "Den vertikala rörelsen (fallet) påverkas bara av gravitationen och är oberoende av farten framåt." },
+        { q: "Analysera tryck: Varför är en vass kniv farligare än en slö vid samma kraft?", o: ["Den har högre fart", "Den har extremt liten area vid eggen", "Den har mer energi", "Den väger mindre"], a: 1, l: "A", e: "Den minimala arean gör att trycket blir gigantiskt även vid liten kraft, vilket bryter materialets bindningar." },
+        { q: "Vad händer med en satellit om dess hastighet minskar drastiskt?", o: ["Den flyger ut i rymden", "Den faller ner mot jorden", "Den stannar i banan", "Den exploderar"], a: 1, l: "A", e: "Utan tillräcklig fart framåt kan inte trögheten balansera gravitationen, och den dras ner." },
+        { q: "Varför lutar man sig inåt i en kurva när man cyklar snabbt?", o: ["För att minska luftmotståndet", "För att motverka vältningsmomentet från trögheten", "För att öka gravitationen", "För att se bättre"], a: 1, l: "A", e: "Genom att luta sig flyttar man tyngdpunkten så att resultanten av krafterna pekar mot stödytan." },
+        { q: "Hur påverkar luftmotstånd en fallande kropp över lång tid?", o: ["Farten ökar i all oändlighet", "Den når en gränshastighet (terminal velocity)", "Den stannar i luften", "Den börjar stiga"], a: 1, l: "A", e: "När luftmotståndet blir lika stort som tyngdkraften slutar föremålet att accelerera." },
+        { q: "Resonera om stabilitet: Varför är en pyramid den mest stabila formen?", o: ["Den är snygg", "Låg tyngdpunkt och enorm stödyta", "Den pekar mot rymden", "Den är gjord av sten"], a: 1, l: "A", e: "Kombinationen av maximal basyta och lägsta möjliga tyngdpunkt gör det nästan omöjligt att få lodlinjen utanför basen." },
+        { q: "Vad skulle hända med planeters banor om gravitationen 'stängdes av'?", o: ["De stannar", "De fortsätter i rät linje pga tröghet", "De åker in i solen", "De börjar snurra snabbare"], a: 1, l: "A", e: "Enligt Newtons första lag fortsätter ett föremål i rät linje om ingen kraft (gravitation) påverkar det." },
+        { q: "Varför ger en person i högklackat mer skada på ett plastgolv än en elefant?", o: ["Elefanter är lättare", "Trycket (P=F/A) blir extremt på klackens lilla yta", "Klackar är gjorda av metall", "Elefanten har mjukare hud"], a: 1, l: "A", e: "Elefantens tyngd fördelas på fyra stora fötter. Personen koncentrerar hela sin vikt på några få kvadratmillimeter." },
+        { q: "Varför måste man sikta ovanför målet vid prickskytte på långt håll?", o: ["För att kulan stiger först", "För att gravitationen drar kulan nedåt under hela färden", "Pga jordens krökning", "För att kulan tappar massa"], a: 1, l: "A", e: "Kaströrelsen gör att kulan faller vertikalt direkt när den lämnar pipan; man måste kompensera för detta fall." }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+
+    function loadQuestion() {
+        const q = questions[currentQ];
+        document.getElementById('badge').innerText = q.l + "-nivå";
+        document.getElementById('badge').className = "badge badge-" + q.l.toLowerCase();
+        document.getElementById('question').innerText = q.q;
+        document.getElementById('counter').innerText = `Fråga ${currentQ + 1} av 30`;
+        document.getElementById('progress-fill').style.width = ((currentQ / 30) * 100) + "%";
+        
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        q.o.forEach((opt, i) => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            div.innerText = opt;
+            div.onclick = () => checkAnswer(i);
+            optionsDiv.appendChild(div);
+        });
+
+        document.getElementById('explanation').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(selected) {
+        const q = questions[currentQ];
+        const options = document.getElementsByClassName('option');
+        
+        for (let opt of options) opt.classList.add('disabled');
+
+        if (selected === q.a) {
+            options[selected].classList.add('correct');
+            score++;
+        } else {
+            options[selected].classList.add('wrong');
+            options[q.a].classList.add('correct');
+        }
+
+        const exp = document.getElementById('explanation');
+        exp.innerText = q.e;
+        exp.style.display = 'block';
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function nextQuestion() {
+        currentQ++;
+        if (currentQ < questions.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        const rs = document.getElementById('result-screen');
+        rs.style.display = 'block';
+        document.getElementById('progress-fill').style.width = "100%";
+        document.getElementById('final-score').innerText = score;
+
+        let grade = "F";
+        let text = "Du behöver repetera grunderna i fysik.";
+
+        if (score >= 27) { grade = "A"; text = "Exceptionellt! Du analyserar fysikaliska samband på en mycket hög nivå."; }
+        else if (score >= 24) { grade = "B"; text = "Mycket bra! Du har en djup förståelse för både rörelse och tryck."; }
+        else if (score >= 21) { grade = "C"; text = "Bra jobbat! Du kan förklara och utveckla fysikaliska samband väl."; }
+        else if (score >= 18) { grade = "D"; text = "Godkänt och lite till. Du har koll på grunderna och vissa samband."; }
+        else if (score >= 15) { grade = "E"; text = "Godkänt! Du har de grundläggande kunskaper som krävs."; }
+
+        document.getElementById('grade').innerText = grade;
+        document.getElementById('grade-text').innerText = text;
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>

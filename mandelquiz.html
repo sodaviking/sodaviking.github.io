@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nelson Mandela: Nationens Spjut</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #f59e0b; /* Guld/Orange för Mandela-tema */
+            --secondary: #10b981; /* Grön för ANC-färgerna */
+            --success: #10b981;
+            --danger: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .quiz-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .badge-e { background: #10b981; color: white; }
+        .badge-c { background: #3b82f6; color: white; }
+        .badge-a { background: #ef4444; color: white; }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: #334155;
+            padding: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background: #475569;
+        }
+
+        .option.correct {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .option.wrong {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .option.disabled {
+            pointer-events: none;
+        }
+
+        .explanation {
+            margin-top: 20px;
+            padding: 15px;
+            background: #0f172a;
+            border-left: 4px solid var(--primary);
+            border-radius: 4px;
+            display: none;
+        }
+
+        .footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        #result-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .grade-display {
+            font-size: 5rem;
+            font-weight: 900;
+            margin: 20px 0;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Nelson Mandela: Nationens Spjut</h1>
+        <p>Historia & Ledarskap • 30 frågor</p>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div id="quiz-screen" class="quiz-card">
+        <div id="badge" class="badge"></div>
+        <div id="question" class="question"></div>
+        <div id="options" class="options"></div>
+        <div id="explanation" class="explanation"></div>
+        
+        <div class="footer">
+            <span id="counter" class="text-muted">Fråga 1 av 30</span>
+            <button id="next-btn" class="btn" onclick="nextQuestion()">Nästa fråga</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="quiz-card">
+        <h2>Ditt resultat</h2>
+        <p>Du fick <span id="final-score"></span> av 30 rätt.</p>
+        <div class="grade-display" id="grade"></div>
+        <p id="grade-text"></p>
+        <button class="btn" style="display:inline-block; margin-top:20px;" onclick="location.reload()">Gör om quizet</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        // E-NIVÅ (1-10) - Grundfakta ur texten
+        { q: "Vem skickades Nelson att bo hos efter att hans far dog?", o: ["Presidenten", "Ledaren för Thembu-folket", "En brittisk soldat", "Sina farföräldrar"], a: 1, l: "E", e: "Texten nämner att han bodde hos Thembu-folkets ledare efter faderns död." },
+        { q: "Varför rymde Nelson från sin väktare/förmyndare?", o: ["Han ville inte gå i skolan", "Han ville inte gifta sig med flickan de valt åt honom", "Han blev misshandlad", "Han ville bli guldgrävare"], a: 1, l: "E", e: "Han rymde för att undvika ett arrangerat äktenskap." },
+        { q: "Var började Nelson arbeta när han kom till Johannesburg?", o: ["I en gruva", "På en advokatbyrå", "I en skola", "På en tidning"], a: 1, l: "E", e: "Han fick jobb på en advokatbyrå (law firm) i staden." },
+        { q: "Vad kallades det rasåtskillnadssystem som rådde i Sydafrika?", o: ["Segregation", "Apartheid", "Demokrati", "Kolonialism"], a: 1, l: "E", e: "Apartheid var det officiella systemet för rasförtryck." },
+        { q: "Vad hette den revolutionära armén som Mandela startade?", o: ["ANC", "Nationens Spjut (The Spear of the Nation)", "The Thembu Warriors", "Frihetsfronten"], a: 1, l: "E", e: "Armén kallades 'The Spear of the Nation'." },
+        { q: "Vilken symbol användes för den revolutionära armén?", o: ["En sköld", "Ett spjut", "En knuten näve", "Ett lejon"], a: 1, l: "E", e: "Symbolen var ett traditionellt afrikanskt vapen - ett spjut." },
+        { q: "Vilket år friades Mandela i förräderimålet (treason trial)?", o: ["1944", "1961", "1962", "1994"], a: 1, l: "E", e: "Efter fem år fanns han 'not guilty' 1961." },
+        { q: "Vad hände i Sharpeville 1960?", o: ["Mandela blev vald till president", "En fredlig demonstration slutade i en massaker", "Apartheid avskaffades", "Nelson gifte sig"], a: 1, l: "E", e: "En fredlig svart demonstration slutade i en tragisk massaker." },
+        { q: "När blev Nelson arresterad och kastad i fängelse igen?", o: ["1960", "1961", "1962", "1990"], a: 2, l: "E", e: "Han arresterades och fängslades 1962 enligt texten." },
+        { q: "Vilken organisation gick Nelson med i?", o: ["Youth League of the ANC", "Brittiska armén", "Thembu-rådet", "Studentkåren"], a: 0, l: "E", e: "Han gick med i ANC:s ungdomsförbund (Youth League)." },
+
+        // C-NIVÅ (11-20) - Förståelse och samband
+        { q: "Varför blev arbetet på advokatbyrån viktigt för Nelsons politiska beslut?", o: ["Han tjänade mycket pengar", "Han såg orättvisorna i apartheid-systemet varje dag", "Han lärde sig skriva brev", "Han träffade kungen där"], a: 1, l: "C", e: "Genom jobbet såg han orättvisorna, vilket fick honom att vilja ändra världen." },
+        { q: "Vad innebär det att Mandela 'gick under jorden' (went underground)?", o: ["Han arbetade i en gruva", "Han fortsatte arbeta hemligt och gömd", "Han flyttade till en källare", "Han lämnade landet"], a: 1, l: "C", e: "Att gå under jorden betyder att man gömmer sig för polisen men fortsätter sin verksamhet." },
+        { q: "Hur påverkade massakern i Sharpeville landets tillstånd?", o: ["Landet blev lugnare", "Landet hamnade i kaos (turmoil)", "Turismen ökade", "Ingenting förändrades"], a: 1, l: "C", e: "Texten säger att landet var i 'turmoil' (kaos/uppror) efter händelsen." },
+        { q: "Vad menade Mandela när han sa att han hade ett 'ideal'?", o: ["En plan för att bli rik", "En vision om ett demokratiskt och fritt samhälle", "Ett sätt att fly från fängelset", "Att återinföra kungadömet"], a: 1, l: "C", e: "Hans ideal var ett samhälle där alla är fria och har samma rättigheter." },
+        { q: "Varför var Nelsons tid under jorden beskriven som svår personligen?", o: ["Han hade ingen mat", "Han saknade sin fru och sina barn", "Han tyckte det var tråkigt", "Han hade inget internet"], a: 1, l: "C", e: "Texten nämner att det var farligt och ensamt, och att han saknade sin familj." },
+        { q: "Vilket samband fanns mellan studentprotester och Mandelas framtida ledarskap?", o: ["Han lärde sig sjunga där", "Det var där han först blev politiskt engagerad", "Han slutade skolan direkt", "Han blev polischef"], a: 1, l: "C", e: "Hans engagemang i studentprotester på college var startskottet för hans politiska liv." },
+        { q: "Hur beskriver texten skillnaden mellan Mandela och andra studenter?", o: ["Han var rikare", "Få studenter blir faktiskt revolutionära ledare som han", "Han var den enda som protesterade", "Han var äldre än de andra"], a: 1, l: "C", e: "Många är politiska i skolan, men texten betonar att få tar steget till att bli revolutionära ledare." },
+        { q: "Vad representerade symbolen spjutet i ett vidare sammanhang?", o: ["Modern teknologi", "Traditionellt afrikanskt motstånd", "Jaktmetoder", "Vänskap med britterna"], a: 1, l: "C", e: "Det visade på en koppling till afrikansk historia och traditionell styrka." },
+        { q: "Varför sattes Mandela inför rätta för 'treason' (högförräderi)?", o: ["För att han rymde hemifrån", "För att han arbetade för att störta apartheid-staten", "För att han var advokat", "För att han inte betalade skatt"], a: 1, l: "C", e: "Regeringen såg hans kamp mot apartheid som ett hot mot staten." },
+        { q: "Varför beskrivs hans beslut att starta en armé som en stor förändring?", o: ["Han tyckte om vapen", "Han gick från fredlig protest till beväpnat motstånd", "Han ville ha en uniform", "Han ville bli general"], a: 1, l: "C", e: "Det var ett steg mot en mer radikal och beväpnad kamp för frihet." },
+
+        // A-NIVÅ (21-30) - Analys och reflektion
+        { q: "Analysera Mandelas citat: 'Det är ett ideal för vilket jag är beredd att dö'. Vad säger detta om hans ledarskap?", o: ["Han var trött på livet", "Han satte saken/folket högre än sin egen säkerhet", "Han ville bli en martyr snabbt", "Han var säker på att vinna direkt"], a: 1, l: "A", e: "Det visar på en total hängivelse och en offervilja som är central för stora revolutionära ledare." },
+        { q: "Hur kan man tolka valet av namnet 'Nationens Spjut' utifrån ett maktperspektiv?", o: ["Det var ett namn som ingen förstod", "Det gav en identitet av styrka och rötter till det förtryckta folket", "Det var menat att skrämma Thembu-folket", "Det var ett slumpmässigt namn"], a: 1, l: "A", e: "Namnet skapade en stolthet och visade att kampen var djupt förankrad i afrikansk kultur." },
+        { q: "Varför anses Mandela vara 'speciell' enligt textens inledning?", o: ["Han var född till kung", "Han förvandlade personliga upplevelser av orättvisa till en nationell kamp", "Han var den enda advokaten i staden", "Han var bra på att springa"], a: 1, l: "A", e: "Det som utmärker honom är hur han tog steget från personlig protest till att leda en revolution." },
+        { q: "Vilken slutsats kan man dra om rättssystemet under apartheid baserat på förräderimålet?", o: ["Det var helt rättvist", "Det användes som ett politiskt verktyg för att tysta motståndare", "Det var mycket snabbt", "Det fanns inga lagar"], a: 1, l: "A", e: "De långa rättsprocesserna (5 år) användes för att hålla ledare borta från gatorna och trötta ut motståndet." },
+        { q: "Resonera kring Mandelas val att gå under jorden trots att han saknade sin familj.", o: ["Han brydde sig inte om sin familj", "Det visar på den enorma personliga uppoffring kampen krävde", "Han ville ha semester själv", "Han trodde polisen inte skulle leta efter honom"], a: 1, l: "A", e: "A-nivå handlar om att se komplexiteten; hans plikt mot landet tvingade honom till personlig smärta." },
+        { q: "Hur påverkade Mandela bilden av 'demokrati' i Sydafrika genom sitt tal 1962?", o: ["Han sa att demokrati var dåligt", "Han definierade det som ett fritt samhälle för alla raser, inte bara vita", "Han ville ha demokrati bara för Thembu-folket", "Han ville att kungen skulle bestämma allt"], a: 1, l: "A", e: "Han omdefinierade målet till att inkludera alla, vilket var revolutionerande i ett segregerat land." },
+        { q: "Vad säger texten om modet som krävdes för att starta 'The Spear of the Nation'?", o: ["Det var lätt för han hade vänner", "Det krävde att han tog på sig rollen som statens fiende nummer ett", "Det krävdes ingenting speciellt", "Det var en hobby för honom"], a: 1, l: "A", e: "Att leda en armé mot en sittande regering är det ultimata risktagandet." },
+        { q: "Jämför Mandela som student och som fånge 1962. Vad har förändrats?", o: ["Ingenting", "Han har gått från protesterande ungdom till en målinriktad och principfast ledare", "Han har blivit mindre intresserad av politik", "Han har blivit rikare"], a: 1, l: "A", e: "Utvecklingen visar hur han mognat och cementerat sina värderingar trots motgångar." },
+        { q: "Varför var kopplingen till Thembu-folket viktig för hans bakgrund?", o: ["Han lärde sig att kriga där", "Det gav honom en grund i afrikanskt ledarskap och kultur", "Han ville bli rikare än dem", "Han ville glömma sitt ursprung"], a: 1, l: "A", e: "Att växa upp nära traditionellt ledarskap gav honom troligen de verktyg han behövde för att senare leda sitt folk." },
+        { q: "Vilken är den viktigaste lärdomen om apartheid utifrån texten?", o: ["Det var ett bra system", "Det skapade så stora orättvisor att folk var beredda att dö för att ändra det", "Det var ett billigt system", "Det påverkade bara de rika"], a: 1, l: "A", e: "Analysen visar att förtryck skapar en motkraft som till slut inte kan stoppas, ens med fängelse." }
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+
+    function loadQuestion() {
+        const q = questions[currentQ];
+        document.getElementById('badge').innerText = q.l + "-nivå";
+        document.getElementById('badge').className = "badge badge-" + q.l.toLowerCase();
+        document.getElementById('question').innerText = q.q;
+        document.getElementById('counter').innerText = `Fråga ${currentQ + 1} av 30`;
+        document.getElementById('progress-fill').style.width = ((currentQ / 30) * 100) + "%";
+        
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        q.o.forEach((opt, i) => {
+            const div = document.createElement('div');
+            div.className = 'option';
+            div.innerText = opt;
+            div.onclick = () => checkAnswer(i);
+            optionsDiv.appendChild(div);
+        });
+
+        document.getElementById('explanation').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+    }
+
+    function checkAnswer(selected) {
+        const q = questions[currentQ];
+        const options = document.getElementsByClassName('option');
+        
+        for (let opt of options) opt.classList.add('disabled');
+
+        if (selected === q.a) {
+            options[selected].classList.add('correct');
+            score++;
+        } else {
+            options[selected].classList.add('wrong');
+            options[q.a].classList.add('correct');
+        }
+
+        const exp = document.getElementById('explanation');
+        exp.innerText = q.e;
+        exp.style.display = 'block';
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function nextQuestion() {
+        currentQ++;
+        if (currentQ < questions.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        const rs = document.getElementById('result-screen');
+        rs.style.display = 'block';
+        document.getElementById('progress-fill').style.width = "100%";
+        document.getElementById('final-score').innerText = score;
+
+        let grade = "F";
+        let text = "Du behöver läsa texten mer noggrant.";
+
+        if (score >= 27) { grade = "A"; text = "Exceptionellt! Du har en djup analytisk förståelse för Mandelas liv och kamp."; }
+        else if (score >= 23) { grade = "B"; text = "Väldigt bra! Du förstår både fakta och de bakomliggande orsakerna."; }
+        else if (score >= 19) { grade = "C"; text = "Bra jobbat! Du ser sambanden i Mandelas politiska resa."; }
+        else if (score >= 15) { grade = "D"; text = "Godkänt. Du har koll på grundfakta och en del förklaringar."; }
+        else if (score >= 11) { grade = "E"; text = "Du har de grundläggande kunskaperna om Mandelas historia."; }
+
+        document.getElementById('grade').innerText = grade;
+        document.getElementById('grade-text').innerText = text;
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
