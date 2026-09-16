@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz – Syror och baser</title>
+<style>
+:root {
+  --bg:#f4f7fb; --card:#fff; --text:#172033; --muted:#667085;
+  --accent:#315efb; --good:#16803c; --bad:#c62828; --border:#d8dee9;
+}
+* { box-sizing:border-box; }
+body { margin:0; font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); }
+.wrap { max-width:1000px; margin:0 auto; padding:28px 18px 50px; }
+header { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:24px; margin-bottom:18px; }
+h1 { margin:0 0 8px; font-size:clamp(25px,4vw,38px); }
+.sub { color:var(--muted); margin:0; line-height:1.5; }
+.progress { margin-top:16px; height:10px; background:#e7ebf2; border-radius:99px; overflow:hidden; }
+#bar { height:100%; width:0%; background:var(--accent); transition:.25s; }
+.question { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:22px; margin:16px 0; }
+.qnum { color:var(--accent); font-weight:700; margin-bottom:8px; }
+.qtext { font-size:19px; line-height:1.45; margin:0 0 17px; }
+.options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:11px; }
+.option { border:1px solid var(--border); border-radius:12px; background:#fff; padding:13px 14px; cursor:pointer; min-height:62px; text-align:left; font-size:16px; line-height:1.35; }
+.option:hover { border-color:var(--accent); background:#f8faff; }
+.option.selected { border-color:var(--accent); box-shadow:0 0 0 2px rgba(49,94,251,.12); }
+.option.correct { border-color:var(--good); background:#eefaf2; }
+.option.wrong { border-color:var(--bad); background:#fff0f0; }
+.feedback { display:none; margin-top:13px; padding:12px 14px; border-radius:10px; background:#f7f8fa; line-height:1.45; }
+.feedback.show { display:block; }
+.hint { margin-top:12px; }
+.hint button { border:0; background:#eef2ff; color:#233b9b; border-radius:9px; padding:8px 11px; cursor:pointer; }
+.hint p { display:none; color:var(--muted); margin:8px 0 0; }
+.hint p.show { display:block; }
+#result { display:none; background:var(--card); border:1px solid var(--border); border-radius:18px; padding:24px; margin-top:20px; }
+#result h2 { margin-top:0; }
+.actions { position:sticky; bottom:12px; display:flex; gap:10px; justify-content:center; margin-top:18px; }
+.actions button { border:0; border-radius:12px; padding:12px 18px; font-weight:700; cursor:pointer; }
+#finish { background:var(--accent); color:white; }
+#reset { background:white; border:1px solid var(--border); color:var(--text); }
+@media(max-width:700px) {
+  .options { grid-template-columns:1fr; }
+  .option { min-height:54px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Quiz: Syror och baser</h1>
+  <p class="sub">20 frågor</p>
+  <div class="progress"><div id="bar"></div></div>
+  <p class="sub" id="count">0 av 20 besvarade</p>
+</header>
+<div id="quiz"></div>
+<div class="actions">
+  <button id="finish">Rätta quizet</button>
+  <button id="reset">Börja om</button>
+</div>
+<section id="result"></section>
+</div>
+
+<script>
+const questions = [{"q": "Vilket påstående beskriver bäst vad som ska undersökas när man mäter pH?", "a": ["Hur sur eller basisk en lösning är", "Hur varm eller kall en lösning är", "Hur färgad eller klar en lösning är", "Hur tung eller lätt en lösning är", "Hur stark eller svag en lösning luktar", "Hur snabbt eller långsamt en lösning rinner"], "c": 0, "e": "pH används för att beskriva hur sur eller basisk en lösning är."}, {"q": "Vilken kombination innehåller bara begrepp som hör till pH-området i dokumentet?", "a": ["Indikatorer, pH-skala och neutral lösning", "Vätejoner, hydroxidjoner och neutral lösning", "Koncentrerad syra, stark bas och neutral lösning", "Svag syra, stark syra och koncentrerad bas", "Saltbildning, buffertar och neutralisationer", "Utspädd bas, svag bas och stark bas"], "c": 0, "e": "Dokumentets pH-del tar upp indikatorer, pH-skalan och neutrala lösningar."}, {"q": "En elev använder en indikator och färgen förändras när lösningen byts. Vilken slutsats passar dokumentets beskrivning?", "a": ["Indikatorns färg beror på lösningens pH", "Indikatorns färg beror på lösningens massa", "Indikatorns färg beror på lösningens temperatur", "Indikatorns färg beror på lösningens volym", "Indikatorns färg beror på lösningens densitet", "Indikatorns färg beror på lösningens hastighet"], "c": 0, "e": "Dokumentet säger att indikatorer får olika färg beroende på pH."}, {"q": "Vilken skillnad mellan pH-papper och pH-mätare är mest förenlig med dokumentets begreppslista?", "a": ["Båda används för att undersöka en lösnings pH", "Båda används för att undersöka en lösnings massa", "Båda används för att undersöka en lösnings volym", "Båda används för att undersöka en lösnings temperatur", "Båda används för att undersöka en lösnings densitet", "Båda används för att undersöka en lösnings färg"], "c": 0, "e": "Både pH-papper och pH-mätare finns med som metoder eller verktyg kopplade till pH."}, {"q": "Vad är det viktigaste innehållet i dokumentets krav om partikeln bakom pH-mätning?", "a": ["Du ska kunna beskriva vilken partikel som räknas", "Du ska kunna beskriva vilken färg som räknas", "Du ska kunna beskriva vilken massa som räknas", "Du ska kunna beskriva vilken volym som räknas", "Du ska kunna beskriva vilken temperatur som räknas", "Du ska kunna beskriva vilken lukt som räknas"], "c": 0, "e": "Dokumentet kräver att du kan beskriva vilken partikel man räknar när pH mäts."}, {"q": "Vilken beskrivning passar bäst in på dokumentets mål med pH-skalan?", "a": ["Förklara hur skalan är uppbyggd och stegens hopp", "Förklara hur skalan är uppbyggd och färgernas nyans", "Förklara hur skalan är uppbyggd och lösningens massa", "Förklara hur skalan är uppbyggd och provets temperatur", "Förklara hur skalan är uppbyggd och vätskans volym", "Förklara hur skalan är uppbyggd och ämnets densitet"], "c": 0, "e": "Dokumentet betonar både hur pH-skalan är uppbyggd och hur stora hoppen är mellan stegen."}, {"q": "Varför är SIV-regeln relevant i just detta arbetsområde enligt dokumentet?", "a": ["Den hör ihop med vad du gör vid syra på huden", "Den hör ihop med hur du mäter färg på huden", "Den hör ihop med hur du mäter massa på huden", "Den hör ihop med hur du mäter temperatur på huden", "Den hör ihop med hur du mäter volym på huden", "Den hör ihop med hur du mäter densitet på huden"], "c": 0, "e": "Dokumentet kopplar SIV-regeln till vad man ska göra om syra eller bas hamnar på huden."}, {"q": "Vilket begrepp hör direkt till avsnittet om syror som lämnar ifrån sig vätejoner?", "a": ["Vätejon", "Hydroxidjon", "Neutral lösning", "Indikatorer", "Buffert", "Neutralisation"], "c": 0, "e": "Vätejon anges som ett centralt begrepp i avsnitt 4.2 om syror."}, {"q": "En syra beskrivs som stark i dokumentets mening. Vad ska eleven kunna resonera om?", "a": ["Skillnaden mot en svag syra och dess konsekvenser", "Skillnaden mot en neutral lösning och dess färg", "Skillnaden mot en indikator och dess temperatur", "Skillnaden mot en buffert och dess volym", "Skillnaden mot en bas och dess densitet", "Skillnaden mot ett salt och dess lukt"], "c": 0, "e": "Dokumentet kräver att du kan skilja starka och svaga syror och förklara vilka konsekvenser skillnaden får."}, {"q": "Två syror kan båda beskrivas med olika koncentration. Vad ska du kunna skilja mellan?", "a": ["En utspädd syra och en koncentrerad syra", "En svag syra och en neutral lösning", "En stark syra och en neutral lösning", "En indikator och en utspädd lösning", "En buffert och en koncentrerad bas", "En hydroxidjon och en stark bas"], "c": 0, "e": "Dokumentet har ett särskilt mål att kunna beskriva skillnaden mellan utspädd och koncentrerad syra."}, {"q": "Vilken jämförelse visar att eleven förstått att styrka och koncentration är två olika begrepp?", "a": ["Stark eller svag syra skiljs från utspädd eller koncentrerad syra", "Stark eller svag syra är samma som utspädd eller koncentrerad syra", "Stark eller svag syra är samma som neutral eller basisk lösning", "Stark eller svag syra beskriver bara lösningens färg", "Stark eller svag syra beskriver bara lösningens temperatur", "Stark eller svag syra beskriver bara lösningens volym"], "c": 0, "e": "Dokumentet behandlar stark/svag och utspädd/koncentrerad som separata skillnader som ska kunna beskrivas."}, {"q": "Vilket resonemang ligger närmast dokumentets krav när en syra löser sig i vatten?", "a": ["Identifiera vilka joner som bildas i vatten", "Identifiera vilken färg som bildas i vatten", "Identifiera vilken lukt som bildas i vatten", "Identifiera vilken massa som bildas i vatten", "Identifiera vilken temperatur som bildas i vatten", "Identifiera vilken volym som bildas i vatten"], "c": 0, "e": "Dokumentet kräver att du kan ange vilka joner som bildas när en given syra löser sig i vatten."}, {"q": "Vilket begrepp hör till avsnittet om baser som tar upp vätejoner?", "a": ["Hydroxidjon", "Vätejon", "pH-papper", "Indikatorer", "Neutral lösning", "Koncentrerad syra"], "c": 0, "e": "Hydroxidjon anges som ett centralt begrepp i avsnitt 4.3 om baser."}, {"q": "Vilken jämförelse ska du kunna göra för baser enligt dokumentets kunskapskrav?", "a": ["Förklara skillnaden mellan stark och svag bas", "Förklara skillnaden mellan syra och indikator", "Förklara skillnaden mellan pH och temperatur", "Förklara skillnaden mellan färg och volym", "Förklara skillnaden mellan massa och densitet", "Förklara skillnaden mellan salt och vatten"], "c": 0, "e": "Dokumentet kräver att du kan beskriva skillnaden mellan en stark och en svag bas samt konsekvenserna."}, {"q": "Vilken beskrivning motsvarar dokumentets krav på koncentrerade och utspädda baser?", "a": ["Beskriva skillnaden mellan koncentrerad och utspädd bas", "Beskriva skillnaden mellan färgad och ofärgad bas", "Beskriva skillnaden mellan varm och kall bas", "Beskriva skillnaden mellan tung och lätt bas", "Beskriva skillnaden mellan snabb och långsam bas", "Beskriva skillnaden mellan sur och neutral bas"], "c": 0, "e": "Dokumentet kräver att du kan beskriva skillnaden mellan utspädd och koncentrerad bas."}, {"q": "När en given bas löser sig i vatten, vilken kunskap efterfrågas uttryckligen?", "a": ["Vilka joner som bildas när basen löser sig", "Vilka färger som bildas när basen löser sig", "Vilka temperaturer som bildas när basen löser sig", "Vilka lukter som bildas när basen löser sig", "Vilka massor som bildas när basen löser sig", "Vilka volymer som bildas när basen löser sig"], "c": 0, "e": "Dokumentet säger att du ska kunna ange vilka joner som bildas när en given bas löser sig i vatten."}, {"q": "Vad beskriver bäst en neutralisation enligt dokumentets kunskapskrav?", "a": ["En reaktion mellan en syra och en bas", "En mätning mellan en syra och en indikator", "En färgförändring mellan en bas och ett papper", "En uppvärmning mellan en syra och vatten", "En filtrering mellan en bas och ett salt", "En avdunstning mellan en syra och luft"], "c": 0, "e": "Dokumentet ber dig beskriva vad neutralisation av en syra och bas är och var den kan förekomma."}, {"q": "Vilken funktion ska du kunna förklara för en buffert i en lösning?", "a": ["Hur bufferten påverkar förändringar i lösningen", "Hur bufferten påverkar färgen på lösningen", "Hur bufferten påverkar massan på lösningen", "Hur bufferten påverkar volymen på lösningen", "Hur bufferten påverkar lukten på lösningen", "Hur bufferten påverkar temperaturen på lösningen"], "c": 0, "e": "Dokumentet kräver att du kan förklara vilken effekt en buffert har och hur den fungerar."}, {"q": "Vilken blandning nämns uttryckligen som exempel när dokumentet tar upp hur salter kan bildas?", "a": ["HCl och NaOH", "HCl och H₂O", "NaOH och H₂O", "HCl och O₂", "NaOH och O₂", "H₂O och O₂"], "c": 0, "e": "Dokumentet nämner HCl och NaOH som exempel på syra och bas som kan blandas för att få salt."}, {"q": "Vilken slutsats följer av dokumentets upplägg från syror till baser och sedan vidare?", "a": ["Området omfattar pH, syror, baser och reaktioner", "Området omfattar bara pH och indikatorernas färger", "Området omfattar bara starka syror och deras egenskaper", "Området omfattar bara svaga baser och deras egenskaper", "Området omfattar bara säkerhet vid laborationer", "Området omfattar bara salter och deras användning"], "c": 0, "e": "Dokumentet går från pH och indikatorer till syror, baser, neutralisation, buffertar och saltbildning."}, {"q": "En elev ska planera sina studier utifrån dokumentets sista del. Vilken kombination av källor nämns där?", "a": ["Spektrum, laborationer och lektionsanteckningar", "Lärobok, nyheter och tidningsartiklar", "Laborationer, filmer och uppslagsverk", "Spektrum, prov och klasskamraters svar", "Lektionsanteckningar, nyheter och forum", "Begreppsfilmer, sociala medier och prov"], "c": 0, "e": "Dokumentet nämner Spektrum, laborationerna och anteckningar från lektioner som informationskällor."}];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i=a.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+let quizData = [];
+function buildQuiz() {
+  quizData = questions.map((q, qi) => {
+    const opts = q.a.map((label, i) => ({label, correct:i===q.c}));
+    return {...q, opts:shuffle(opts)};
+  });
+
+  const root=document.getElementById('quiz');
+  root.innerHTML='';
+  quizData.forEach((q,qi)=>{
+    const section=document.createElement('section');
+    section.className='question';
+    section.innerHTML = `
+      <div class="qnum">Fråga ${qi+1} av 20</div>
+      <p class="qtext">${q.q}</p>
+      <div class="options"></div>
+      <div class="feedback" id="fb-${qi}"></div>
+      <div class="hint">
+        <button type="button">Visa ledtråd</button>
+        <p>Jämför varje alternativ med det som faktiskt efterfrågas i frågan.</p>
+      </div>`;
+    const box=section.querySelector('.options');
+    q.opts.forEach((o,oi)=>{
+      const b=document.createElement('button');
+      b.type='button'; b.className='option';
+      b.textContent=String.fromCharCode(65+oi)+'. '+o.label;
+      b.addEventListener('click',()=>selectOption(qi,oi));
+      box.appendChild(b);
+    });
+    section.querySelector('.hint button').addEventListener('click',e=>{
+      e.currentTarget.nextElementSibling.classList.toggle('show');
+    });
+    root.appendChild(section);
+  });
+  updateProgress();
+}
+
+const selected = {};
+
+function selectOption(qi,oi) {
+  selected[qi]=oi;
+  const sec=document.querySelectorAll('.question')[qi];
+  sec.querySelectorAll('.option').forEach((b,i)=>b.classList.toggle('selected',i===oi));
+  sec.querySelector('.feedback').classList.remove('show');
+  updateProgress();
+}
+
+function updateProgress() {
+  const n=Object.keys(selected).length;
+  document.getElementById('count').textContent=`${n} av 20 besvarade`;
+  document.getElementById('bar').style.width=(n/20*100)+'%';
+}
+
+document.getElementById('finish').addEventListener('click',()=>{
+  let score=0;
+  quizData.forEach((q,qi)=>{
+    const sec=document.querySelectorAll('.question')[qi];
+    const buttons=sec.querySelectorAll('.option');
+    buttons.forEach((b,oi)=>{
+      b.classList.remove('correct','wrong');
+      if(q.opts[oi].correct) b.classList.add('correct');
+      if(selected[qi]===oi && !q.opts[oi].correct) b.classList.add('wrong');
+    });
+    const fb=sec.querySelector('.feedback');
+    if(selected[qi] !== undefined && q.opts[selected[qi]].correct) {
+      score++;
+      fb.textContent='Rätt svar: '+q.e;
+    } else if(selected[qi] === undefined) {
+      fb.textContent='Frågan är obesvarad. Det rätta svaret är markerat i grönt.';
+    } else {
+      fb.textContent='Förklaring: '+q.e;
+    }
+    fb.classList.add('show');
+  });
+  const pct=Math.round(score/20*100);
+  const r=document.getElementById('result');
+  r.innerHTML=`<h2>Resultat</h2><p>Du fick <strong>${score} av 20</strong> rätt (${pct} %).</p><p>Gröna svar är korrekta och röda visar ett valt felaktigt svar.</p>`;
+  r.style.display='block';
+  r.scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+document.getElementById('reset').addEventListener('click',()=>{
+  for(const k in selected) delete selected[k];
+  document.getElementById('result').style.display='none';
+  buildQuiz();
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+buildQuiz();
+</script>
+</body>
+</html>
